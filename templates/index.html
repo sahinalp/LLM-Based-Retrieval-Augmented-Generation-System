@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Based Retrieval-Augmented Generation (RAG) System</title>
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+</head>
+<body>
+<div class="chat-wrapper">
+    <div id="messages" class="messages"></div>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Type your message..." autocomplete="off" />
+        <button id="sendBtn">Send</button>
+        <div id="loading"><div class="spinner"></div></div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function addMessage(text, sender) {
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('message', sender);
+        msgDiv.innerHTML = `<div>${text}</div><div class="timestamp">${new Date().toLocaleTimeString()}</div>`;
+        document.getElementById('messages').appendChild(msgDiv);
+        msgDiv.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text) return;
+        addMessage(text, 'user');
+        input.value = '';
+        document.getElementById('loading').style.display = 'flex';
+
+        $.post('/get', { msg: text }).done(function(data) {
+            document.getElementById('loading').style.display = 'none';
+            addMessage(data.response, 'bot');
+        }).fail(function() {
+            document.getElementById('loading').style.display = 'none';
+            addMessage('Error retrieving response.', 'bot');
+        });
+    }
+
+    document.getElementById('sendBtn').addEventListener('click', sendMessage);
+    document.getElementById('userInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendMessage();
+    });
+</script>
+</body>
+</html>
